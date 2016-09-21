@@ -1,3 +1,5 @@
+# Need to build j2objc_protoc.exe for Windows? [Click here.](protobuf/compiler/vsprojects/README.md) #
+
 # J2ObjC: Java to Objective-C Translator and Runtime #
 
 [![Build Status](https://travis-ci.org/google/j2objc.svg)](https://travis-ci.org/google/j2objc)
