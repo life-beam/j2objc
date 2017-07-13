@@ -46,10 +46,10 @@ static pthread_mutexattr_t* recursiveAttributes()
 {
     if ( !sRecursiveLockAttrIntialized ) {
         int err = pthread_mutexattr_init(&sRecursiveLockAttr);
-        require_noerr_string(err, done, "pthread_mutexattr_init failed");
+        __Require_noErr_String(err, done, "pthread_mutexattr_init failed");
 
         err = pthread_mutexattr_settype(&sRecursiveLockAttr, PTHREAD_MUTEX_RECURSIVE);
-        require_noerr_string(err, done, "pthread_mutexattr_settype failed");
+        __Require_noErr_String(err, done, "pthread_mutexattr_settype failed");
 
         sRecursiveLockAttrIntialized = true;
     }
@@ -167,10 +167,10 @@ static SyncData* id2data(id object, enum usage why)
 
             // Found a match.
             result = item->data;
-            require_action_string(result->threadCount > 0, cache_done,
-                                  result = NULL, "id2data cache is buggy");
-            require_action_string(item->lockCount > 0, cache_done,
-                                  result = NULL, "id2data cache is buggy");
+            __Require_Action_String(result->threadCount > 0, cache_done,
+                                  item = NULL, "id2data cache is buggy");
+            __Require_Action_String(item->lockCount > 0, cache_done,
+                                  item = NULL, "id2data cache is buggy");
 
             switch(why) {
             case ACQUIRE:
@@ -241,9 +241,9 @@ static SyncData* id2data(id object, enum usage why)
     result->object = object;
     result->threadCount = 1;
     err = pthread_mutex_init(&result->mutex, recursiveAttributes());
-    require_noerr_string(err, done, "pthread_mutex_init failed");
+    __Require_noErr_String(err, done, "pthread_mutex_init failed");
     err = pthread_cond_init(&result->conditionVariable, NULL);
-    require_noerr_string(err, done, "pthread_cond_init failed");
+    __Require_noErr_String(err, done, "pthread_cond_init failed");
     result->nextData = *listp;
     *listp = result;
 
@@ -254,10 +254,10 @@ static SyncData* id2data(id object, enum usage why)
         // All RELEASE and CHECK and recursive ACQUIRE are
         // handled by the per-thread cache above.
 
-        require_string(result != NULL, really_done, "id2data is buggy");
-        require_action_string(why == ACQUIRE || why == TEST, really_done,
+        __Require_String(result != NULL, really_done, "id2data is buggy");
+        __Require_Action_String(why == ACQUIRE || why == TEST, really_done,
                               result = NULL, "id2data is buggy");
-        require_action_string(result->object == object, really_done,
+        __Require_Action_String(result->object == object, really_done,
                               result = NULL, "id2data is buggy");
 
         if (!cache) cache = fetch_cache(YES);
@@ -285,10 +285,10 @@ int objc_sync_enter(id obj)
 
     if (obj) {
         SyncData* data = id2data(obj, ACQUIRE);
-        require_action_string(data != NULL, done, result = OBJC_SYNC_NOT_INITIALIZED, "id2data failed");
+        __Require_Action_String(data != NULL, done, result = OBJC_SYNC_NOT_INITIALIZED, "id2data failed");
 
         result = pthread_mutex_lock(&data->mutex);
-        require_noerr_string(result, done, "pthread_mutex_lock failed");
+        __Require_noErr_String(result, done, "pthread_mutex_lock failed");
     } else {
         // @synchronized(nil) does nothing
 #ifdef DEBUG_NIL_SYNC
@@ -310,10 +310,10 @@ int objc_sync_exit(id obj)
 
     if (obj) {
         SyncData* data = id2data(obj, RELEASE);
-        require_action_string(data != NULL, done, result = OBJC_SYNC_NOT_OWNING_THREAD_ERROR, "id2data failed");
+        __Require_Action_String(data != NULL, done, result = OBJC_SYNC_NOT_OWNING_THREAD_ERROR, "id2data failed");
 
         result = pthread_mutex_unlock(&data->mutex);
-        require_noerr_string(result, done, "pthread_mutex_unlock failed");
+        __Require_noErr_String(result, done, "pthread_mutex_unlock failed");
     } else {
         // @synchronized(nil) does nothing
     }
@@ -341,7 +341,7 @@ int objc_sync_wait(id obj, long long milliSecondsMaxWait)
     // XXX need to retry cond_wait under out-of-our-control failures
     if ( milliSecondsMaxWait == 0 ) {
         result = pthread_cond_wait(&data->conditionVariable, &data->mutex);
-        require_noerr_string(result, done, "pthread_cond_wait failed");
+        __Require_noErr_String(result, done, "pthread_cond_wait failed");
     }
     else {
        	struct timespec maxWait;
@@ -349,7 +349,7 @@ int objc_sync_wait(id obj, long long milliSecondsMaxWait)
         maxWait.tv_nsec = (long)((milliSecondsMaxWait - (maxWait.tv_sec * 1000)) * 1000000);
         result = pthread_cond_timedwait_relative_np(&data->conditionVariable, &data->mutex, &maxWait);
         if (result != ETIMEDOUT) {
-          require_noerr_string(result, done, "pthread_cond_timedwait_relative_np failed");
+          __Require_noErr_String(result, done, "pthread_cond_timedwait_relative_np failed");
         }
     }
     // no-op to keep compiler from complaining about branch to next instruction
@@ -377,7 +377,7 @@ int objc_sync_notify(id obj)
     }
 
     result = pthread_cond_signal(&data->conditionVariable);
-    require_noerr_string(result, done, "pthread_cond_signal failed");
+    __Require_noErr_String(result, done, "pthread_cond_signal failed");
 
 done:
     if ( result == EPERM )
@@ -399,7 +399,7 @@ int objc_sync_notifyAll(id obj)
     }
 
     result = pthread_cond_broadcast(&data->conditionVariable);
-    require_noerr_string(result, done, "pthread_cond_broadcast failed");
+    __Require_noErr_String(result, done, "pthread_cond_broadcast failed");
 
 done:
     if ( result == EPERM )
