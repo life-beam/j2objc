@@ -55,6 +55,7 @@ import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.type.TypeKind;
 import javax.lang.model.util.Elements;
 import javax.tools.JavaFileObject;
 
@@ -801,17 +802,29 @@ public final class ElementUtil {
   }
 
   /**
-   * Returns whether an element is marked as always being non-null. Field, method,
-   * and parameter elements can be defined as non-null with a Nonnull annotation.
+   * Returns whether an element is marked as always being non-null.
+   *
+   * Field, method, and parameter elements can be defined as non-null with a Nonnull annotation.
+   *
    * Method parameters can also be defined as non-null by annotating the owning
    * package or type element with the ParametersNonnullByDefault annotation.
+   *
+   * If assumeNonnull, all elements will be non-null unless otherwise specified as nullable.
    */
-  public static boolean isNonnull(Element element, boolean parametersNonnullByDefault) {
+  public static boolean isNonnull(
+          Element element, boolean parametersNonnullByDefault, boolean assumeNonnull) {
+    boolean applicable;
+    if (isVariable(element)) {
+      applicable = !((VariableElement) element).asType().getKind().isPrimitive();
+    } else {
+      TypeKind kind = ((ExecutableElement) element).getReturnType().getKind();
+      applicable = kind != TypeKind.VOID && !kind.isPrimitive();
+    }
+
     return hasNonnullAnnotation(element)
         || isConstructor(element)  // Java constructors are always non-null.
-        || (isParameter(element)
-            && parametersNonnullByDefault
-            && !((VariableElement) element).asType().getKind().isPrimitive());
+        || assumeNonnull && applicable
+        || isParameter(element) && parametersNonnullByDefault && applicable;
   }
 
   /**

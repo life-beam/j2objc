@@ -176,7 +176,8 @@ public final class PropertyGenerator {
     if (options.nullability() && !varElement.asType().getKind().isPrimitive()) {
       if (ElementUtil.hasNullableAnnotation(varElement)) {
         attributes.add("nullable");
-      } else if (ElementUtil.isNonnull(varElement, parametersNonnullByDefault)) {
+      } else if (ElementUtil.isNonnull(varElement, parametersNonnullByDefault,
+          options.assumeNonnull())) {
         attributes.add("nonnull");
       }
     }

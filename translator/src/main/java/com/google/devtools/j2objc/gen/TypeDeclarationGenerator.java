@@ -729,7 +729,7 @@ public class TypeDeclarationGenerator extends TypeGenerator {
       if (ElementUtil.hasNullableAnnotation(element)) {
         return " __nullable";
       }
-      if (ElementUtil.isNonnull(element, parametersNonnullByDefault)) {
+      if (ElementUtil.isNonnull(element, parametersNonnullByDefault, options.assumeNonnull())) {
         return " __nonnull";
       }
     }

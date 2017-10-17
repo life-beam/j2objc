@@ -80,6 +80,7 @@ public class Options {
   private String processors = null;
   private boolean disallowInheritedConstructors = true;
   private boolean nullability = false;
+  private boolean assumeNonnull = false;
   private TimingLevel timingLevel = TimingLevel.NONE;
   private boolean dumpAST = false;
   private String lintArgument = null;
@@ -469,6 +470,8 @@ public class Options {
         disallowInheritedConstructors = false;
       } else if (arg.equals("--nullability")) {
         nullability = true;
+      } else if (arg.equals("--assume-nonnull")) {
+        assumeNonnull = true;
       } else if (arg.startsWith("-Xlint")) {
         lintArgument = arg;
       } else if (arg.equals("-Xtranslate-bootclasspath")) {
@@ -956,6 +959,15 @@ public class Options {
   @VisibleForTesting
   public void setEmitSourceHeaders(boolean b) {
     emitSourceHeaders = b;
+  }
+
+  public boolean assumeNonnull() {
+    return assumeNonnull;
+  }
+
+  @VisibleForTesting
+  public void setAssumeNonnull(boolean b) {
+    assumeNonnull = b;
   }
 
   public ExternalAnnotations externalAnnotations() {
