@@ -310,6 +310,34 @@ public class TypeDeclarationGeneratorTest extends GenerationTest {
         "withInt:(jint)count;");
   }
 
+  // Verify --assume-nonnull sets unspecified parameters and return types as non-null
+  public void testAssumeNonnullOption() throws IOException {
+    String source = "package foo.bar; import javax.annotation.*; "
+            + "public class Test {"
+            + "  String test(@Nullable String msg, Object var, int count) { "
+            + "    return msg.isEmpty() ? \"\" : msg; }"
+            + "  int test2() { "
+            + "    return 0; }"
+            + "}";
+
+    Options.setNullability(true);
+    Options.setAssumeNonnull(true);
+
+    String translation = translateSourceFile(source, "foo.bar.Test", "foo/bar/Test.h");
+
+    // var is also nonnull because of the assume non-null option.
+    assertTranslatedLines(translation,
+        // Verify parameter isn't affected by default.
+        "- (NSString * __nonnull)testWithNSString:(NSString * __nullable)msg",
+        // Verify default nonnull is specified.
+        "withId:(id __nonnull)var",
+        // Default should not apply to primitive type.
+        "withInt:(jint)count;");
+
+    // Verify primitive return type isn't annotated
+    assertTranslatedLines(translation, "- (jint)test2;");
+  }
+
   public void testNullabilityPragmas() throws IOException {
     String source = "package foo.bar; import javax.annotation.*; "
         + "public class Test {"

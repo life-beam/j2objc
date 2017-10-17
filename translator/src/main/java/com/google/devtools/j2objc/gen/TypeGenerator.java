@@ -91,7 +91,7 @@ public abstract class TypeGenerator extends AbstractSourceGenerator {
     parametersNonnullByDefault = Options.nullability()
         && areParametersNonnullByDefault();
     hasNullabilityAnnotations = Options.nullability()
-        && (parametersNonnullByDefault || hasNullabilityAnnotations());
+        && (Options.assumeNonnull() || parametersNonnullByDefault || hasNullabilityAnnotations());
   }
 
   protected boolean shouldPrintDeclaration(BodyDeclaration decl) {
@@ -331,8 +331,18 @@ public abstract class TypeGenerator extends AbstractSourceGenerator {
       if (BindingUtil.hasNonnullAnnotation(binding)) {
         return " __nonnull";
       }
-      if (isParameter && !((IVariableBinding) binding).getType().isPrimitive()
-          && (parametersNonnullByDefault || BindingUtil.hasNonnullAnnotation(binding))) {
+
+      boolean primitive;
+      if (binding instanceof IVariableBinding) {
+        primitive = ((IVariableBinding) binding).getType().isPrimitive();
+      } else {
+        primitive = ((IMethodBinding) binding).getReturnType().isPrimitive();
+      }
+
+      if (Options.assumeNonnull() && !primitive) {
+        return " __nonnull";
+      }
+      if (isParameter && !primitive && (parametersNonnullByDefault || BindingUtil.hasNonnullAnnotation(binding))) {
         return " __nonnull";
       }
     }

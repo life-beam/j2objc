@@ -93,6 +93,7 @@ public class Options {
   private boolean disallowInheritedConstructors = false;
   private boolean swiftFriendly = false;
   private boolean nullability = false;
+  private boolean assumeNonnull = false;
   private EnumSet<LintOption> lintOptions = EnumSet.noneOf(LintOption.class);
   private boolean includeGeneratedSources = false;
   private TimingLevel timingLevel = TimingLevel.NONE;
@@ -522,6 +523,8 @@ public class Options {
         disallowInheritedConstructors = true;
       } else if (arg.equals("--nullability")) {
         nullability = true;
+      } else if (arg.equals("--assume-nonnull")) {
+        assumeNonnull = true;
       } else if (arg.startsWith("-Xlint")) {
         lintOptions = LintOption.parse(arg);
       } else if (arg.equals("-Xuse-jdt")) {
@@ -1025,6 +1028,15 @@ public class Options {
   @VisibleForTesting
   public static void setNullability(boolean b) {
     instance.nullability = b;
+  }
+
+  public static boolean assumeNonnull() {
+    return instance.assumeNonnull;
+  }
+
+  @VisibleForTesting
+  public static void setAssumeNonnull(boolean b) {
+    instance.assumeNonnull = b;
   }
 
   public static EnumSet<LintOption> lintOptions() {
